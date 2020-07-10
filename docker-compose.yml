@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+      args:
+        - XDEBUG_IDEKEY=${XDEBUG_IDEKEY}
+        - XDEBUG_PORT=${XDEBUG_PORT}
+        - XDEBUG_HOST=${XDEBUG_HOST}
+    ports:
+      - "${PHP_FPM_CONTAINER_PORT}:9001"
+    volumes:
+      - ./:/var/www/eonx
+    depends_on:
+      - db
+
+  db:
+    build: ./docker/db
+    ports:
+      - "${DB_CONTAINER_PORT}:3306"
+    volumes:
+      - db_eonx:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+
+volumes:
+  db_eonx:
+    driver: local
