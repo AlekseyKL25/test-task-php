@@ -13,15 +13,15 @@ use Illuminate\Validation\Rule;
  */
 final class MailChimpListMember extends MailChimpEntity
 {
-    const STATUS_SUBSCRIBED = 'subscribed';
-    const STATUS_UNSUBSCRIBED = 'unsubscribed';
-    const STATUS_CLEANED = 'cleaned';
-    const STATUS_PENDING = 'pending';
-    const STATUS_TRANSACTIONAL = 'transactional';
-    const STATUS_ARCHIVED = 'archived';
+    public const STATUS_SUBSCRIBED = 'subscribed';
+    public const STATUS_UNSUBSCRIBED = 'unsubscribed';
+    public const STATUS_CLEANED = 'cleaned';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_TRANSACTIONAL = 'transactional';
+    public const STATUS_ARCHIVED = 'archived';
 
-    const EMAIL_TYPE_HTML = 'html';
-    const EMAIL_TYPE_TEXT = 'text';
+    public const EMAIL_TYPE_HTML = 'html';
+    public const EMAIL_TYPE_TEXT = 'text';
 
     /**
      * @ORM\Id
@@ -229,6 +229,9 @@ final class MailChimpListMember extends MailChimpEntity
         return $array;
     }
 
+    /**
+     * @return array
+     */
     public function toMailChimpArray(): array
     {
         $jsonTypeObjectFields = [ // these fields encodes as 'array' when empty.
@@ -243,7 +246,7 @@ final class MailChimpListMember extends MailChimpEntity
             if ($value === null) {
                 continue;
             }
-            if (in_array($property, $jsonTypeObjectFields)) {
+            if (\in_array($property, $jsonTypeObjectFields)) {
                 continue;
             }
 

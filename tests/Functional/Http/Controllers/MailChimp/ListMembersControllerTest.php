@@ -132,7 +132,6 @@ final class ListMembersControllerTest extends ListMemberTestCase
 
         $content = \json_decode($this->response->getContent(), true);
         self::assertArrayHasKey('email_type', $content['errors']);
-
     }
 
     /**
@@ -311,34 +310,21 @@ final class ListMembersControllerTest extends ListMemberTestCase
     }
 
     /**
-     * Tests API returns error response when repeating removal
+     * Tests API returns error response when removing archived
      */
     public function testRemoveMemberRepeatingFails(): void
     {
-        $this->post('/mailchimp/lists', static::$listData);
-        $listContent = \json_decode($this->response->content(), true);
-        $listId = $listContent['list_id'];
+        $list = $this->createList(self::$listData);
+        $createMemberData = self::generateMemberData();
+        $createMemberData['status'] = MailChimpListMember::STATUS_ARCHIVED;
+        $member = $this->createListMember($list, $createMemberData);
 
-        $this->post(\sprintf("/mailchimp/lists/%s/members", $listId), self::generateMemberData());
-        $memberContent = \json_decode($this->response->content(), true);
-
-        // Refresh list for refreshing 'members' field after creating member above
-        $list = $this->entityManager->getRepository(MailChimpList::class)->find($listId);
-        $this->entityManager->refresh($list);
-
-        $this->delete(\sprintf('/mailchimp/lists/%s/members/%s', $listContent['list_id'], $memberContent['id']));
-
-        $this->assertResponseOk();
-        self::assertEmpty(\json_decode($this->response->content(), true));
-
-        $this->delete(\sprintf('/mailchimp/lists/%s/members/%s', $listContent['list_id'], $memberContent['id']));
+        $this->delete(\sprintf('/mailchimp/lists/%s/members/%s', $list->getId(), $member->getId()));
         $content = \json_decode($this->response->content(), true);
 
         $this->assertResponseStatus(405);
         self::assertArrayHasKey('message', $content);
         self::assertEquals('Method Not Allowed', $content['message']);
-
-        $this->createdListIds[] = $listContent['mail_chimp_id']; // Store MailChimp list id for cleaning purposes
     }
 
     /**
@@ -346,10 +332,12 @@ final class ListMembersControllerTest extends ListMemberTestCase
      */
     public function testDeletePermanentMemberListNotFoundResponse(): void
     {
-        $this->post(\sprintf(
-            '/mailchimp/lists/%s/members/%s/actions/delete-permanent',
-            'not_existing_list',
-            'not_existing_member')
+        $this->post(
+            \sprintf(
+                '/mailchimp/lists/%s/members/%s/actions/delete-permanent',
+                'not_existing_list',
+                'not_existing_member'
+            )
         );
         $this->assertListNotFoundResponse('not_existing_list');
     }
@@ -361,11 +349,13 @@ final class ListMembersControllerTest extends ListMemberTestCase
     {
         $list = $this->createList(self::$listData);
 
-        $this->post(\sprintf(
-            '/mailchimp/lists/%s/members/%s/actions/delete-permanent',
-            $list->getId(),
-            'not_existing_member'
-        ));
+        $this->post(
+            \sprintf(
+                '/mailchimp/lists/%s/members/%s/actions/delete-permanent',
+                $list->getId(),
+                'not_existing_member'
+            )
+        );
         $this->assertMemberNotFoundResponse('not_existing_member');
     }
 
@@ -386,11 +376,13 @@ final class ListMembersControllerTest extends ListMemberTestCase
         $list = $this->entityManager->getRepository(MailChimpList::class)->find($listId);
         $this->entityManager->refresh($list);
 
-        $this->post(\sprintf(
-            '/mailchimp/lists/%s/members/%s/actions/delete-permanent',
-            $listContent['list_id'],
-            $memberId
-        ));
+        $this->post(
+            \sprintf(
+                '/mailchimp/lists/%s/members/%s/actions/delete-permanent',
+                $listContent['list_id'],
+                $memberId
+            )
+        );
 
         $this->assertResponseOk();
         self::assertEmpty(\json_decode($this->response->content(), true));
